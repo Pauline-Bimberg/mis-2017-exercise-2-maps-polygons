@@ -17,7 +17,9 @@
              android:layout_alignParentTop="true"
              android:layout_alignParentStart="true"
              android:layout_marginTop="132dp"
-             android:layout_alignParentLeft="true" />
+             android:layout_alignParentLeft="true"
+             android:layout_alignParentRight="true"
+             android:layout_alignParentEnd="true" />
 
 
         <EditText
@@ -25,12 +27,36 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="EditText"
+            android:layout_marginTop="18dp"
             android:layout_alignParentTop="true"
-            android:layout_marginTop="46dp"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentStart="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+
+    <Button
+        android:id="@+id/startPoly"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start Polygon"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="22dp"
+        android:layout_marginEnd="22dp"
+        android:layout_below="@+id/editText"
+        android:layout_toLeftOf="@+id/endPoly"
+        android:layout_toStartOf="@+id/endPoly" />
+
+    <Button
+        android:id="@+id/endPoly"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="End Polygon"
+        android:layout_marginRight="55dp"
+        android:layout_marginEnd="55dp"
+        android:layout_alignBaseline="@+id/startPoly"
+        android:layout_alignBottom="@+id/startPoly"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 
 
 </RelativeLayout>

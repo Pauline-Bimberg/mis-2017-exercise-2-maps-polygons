@@ -1,16 +1,10 @@
 package mis2.maps;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.preference.Preference;
-import android.preference.PreferenceManager;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.support.v4.app.ShareCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,19 +18,20 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private EditText editText;
+    private LatLng myLatLng;
     private Button startPoly;
-    private Button endPoly;
+    private Button clearButton;
+    private Polygon mypolygon;
+    private PolygonOptions polyOpt;
     private boolean polyStarted = false;
-    PolygonOptions polygon = new PolygonOptions();
+    private ArrayList pointList = new ArrayList();
+
     private int polycounter = 0;
 
 
@@ -76,8 +71,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         editText = (EditText) findViewById(R.id.editText);
         startPoly = (Button) findViewById(R.id.startPoly);
-        endPoly = (Button) findViewById(R.id.endPoly);
-        Polygon mapPolygon = mMap.addPolygon(polygon);
+        clearButton = (Button) findViewById(R.id.clearButton);
+
 
         // TODO: Code inspired by:
         sharedPref = getSharedPreferences("Locations", Context.MODE_PRIVATE);
@@ -114,27 +109,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 String text = editText.getText().toString();
                 String counterString = Integer.toString(counter);
+
+                myLatLng = latLng;
+
                 sharedPref = getSharedPreferences("Locations", Context.MODE_PRIVATE);
                 counter++;
 
                 editor = sharedPref.edit();
 
-                editor.putString("lat" + counterString , Double.toString(latLng.latitude));
-                editor.putString("lng" + counterString , Double.toString(latLng.longitude));
-                editor.putString("text" + counterString , text);
+                editor.putString("lat" + counterString, Double.toString(latLng.latitude));
+                editor.putString("lng" + counterString, Double.toString(latLng.longitude));
+                editor.putString("text" + counterString, text);
                 editor.putInt("Counter", counter);
                 editor.commit();
 
 
-
                 mMap.addMarker(new MarkerOptions().position(latLng).title(text));
 
-                if(polyStarted = true){
+                if (polyStarted == true) {
 
-                    polygon
-                            .add( latLng);
-
+                    pointList.add(latLng);
                 }
+
+               if (pointList.isEmpty() == false) {
+                    mypolygon.setPoints(pointList);
+               }
+
+
+
 
             }
         });
@@ -142,18 +144,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startPoly.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                polyStarted = true;
+                if (polyStarted == false){
+                        polyStarted = true;
+                    startPoly.setText("End Polygon");
 
+
+                polyOpt = new PolygonOptions()
+                        .add(new LatLng(0, 0))
+                        .strokeColor(Color.argb(255, 102, 204, 0))
+                        .fillColor(Color.argb(100, 102, 204, 0));
+                mypolygon = mMap.addPolygon(polyOpt);
             }
-        });
+            else {
+                    pointList.clear();
+                    polyStarted = false;
+                    startPoly.setText("Start Polygon");
+                }
+        }});
 
-        endPoly.setOnClickListener(new View.OnClickListener() {
+        clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                polyStarted = false;
-                // TODO: Berechnung Shape, Setzen Mittelpunkt mit beschriftung
+                sharedPref = getSharedPreferences("Locations", Context.MODE_PRIVATE);
+                editor = sharedPref.edit();
+                editor.clear();
+                editor.commit();
 
-
+                mMap.clear();
 
             }
         });

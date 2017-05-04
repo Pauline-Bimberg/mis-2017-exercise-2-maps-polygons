@@ -43,14 +43,14 @@
         android:layout_marginRight="22dp"
         android:layout_marginEnd="22dp"
         android:layout_below="@+id/editText"
-        android:layout_toLeftOf="@+id/endPoly"
-        android:layout_toStartOf="@+id/endPoly" />
+        android:layout_toLeftOf="@+id/clearButton"
+        android:layout_toStartOf="@+id/clearButton" />
 
     <Button
-        android:id="@+id/endPoly"
+        android:id="@+id/clearButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="End Polygon"
+        android:text="Clear"
         android:layout_marginRight="55dp"
         android:layout_marginEnd="55dp"
         android:layout_alignBaseline="@+id/startPoly"

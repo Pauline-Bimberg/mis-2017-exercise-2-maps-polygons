@@ -1,8 +1,14 @@
 package mis2.maps;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -18,6 +24,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 
+import java.sql.Array;
 import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -31,6 +38,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private PolygonOptions polyOpt;
     private boolean polyStarted = false;
     private ArrayList pointList = new ArrayList();
+    LocationManager locationManager;
 
     private int polycounter = 0;
 
@@ -73,10 +81,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startPoly = (Button) findViewById(R.id.startPoly);
         clearButton = (Button) findViewById(R.id.clearButton);
 
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        });
+
 
         // TODO: Code inspired by:
         sharedPref = getSharedPreferences("Locations", Context.MODE_PRIVATE);
         counter = sharedPref.getInt("Counter",0);
+
+        polycounter = sharedPref.getInt("polyCounter",0);
 
         if(counter != 0){
             String latitude = "";
@@ -94,6 +137,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.addMarker(new MarkerOptions().position(position).title(text));
             }
         }
+
 
 
         // Move view to Weimar
@@ -121,21 +165,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 editor.putString("lng" + counterString, Double.toString(latLng.longitude));
                 editor.putString("text" + counterString, text);
                 editor.putInt("Counter", counter);
+
+
+                if (polyStarted == true) {
+                    pointList.add(latLng);
+                }
+
                 editor.commit();
 
 
                 mMap.addMarker(new MarkerOptions().position(latLng).title(text));
 
-                if (polyStarted == true) {
 
-                    pointList.add(latLng);
-                }
 
                if (pointList.isEmpty() == false) {
                     mypolygon.setPoints(pointList);
                }
-
-
 
 
             }
@@ -148,7 +193,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         polyStarted = true;
                     startPoly.setText("End Polygon");
 
-
                 polyOpt = new PolygonOptions()
                         .add(new LatLng(0, 0))
                         .strokeColor(Color.argb(255, 102, 204, 0))
@@ -156,8 +200,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mypolygon = mMap.addPolygon(polyOpt);
             }
             else {
+                    LatLng centroid = getPolyCentroid(pointList);
+                    mMap.addMarker(new MarkerOptions().position(centroid).title(getPolySize(pointList)));
+
                     pointList.clear();
                     polyStarted = false;
+
+
                     startPoly.setText("Start Polygon");
                 }
         }});
@@ -177,5 +226,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    // Calculating the centroid of a polygon
+    private LatLng getPolyCentroid(ArrayList<LatLng> pointlist){
+        LatLng centroid;
+        int pointCount = pointlist.size();
+        double latitude = 0.0;
+        double longitude = 0.0;
 
+        for (int i = 0; i<pointlist.size(); i++){
+
+            latitude += pointlist.get(i).latitude;
+            longitude += pointlist.get(i).longitude;
+        }
+
+        latitude = latitude/pointCount;
+        longitude = longitude/pointCount;
+
+        centroid = new LatLng(latitude, longitude);
+
+
+        return centroid;
+    }
+
+    private String getPolySize(ArrayList<LatLng> pointlist){
+        double polySize;
+        double polySum = 0.0;
+
+        double lat1 = pointlist.get(0).latitude;
+        double long1 = pointlist.get(0).longitude;
+        double lat2 = pointlist.get(pointlist.size()-1).latitude;
+        double long2 = pointlist.get(pointlist.size()-1).longitude;
+
+        for (int i=0; i<(pointlist.size() - 1); i++){
+
+            double latitude1 = pointlist.get(i).latitude;
+            double longitude1 = pointlist.get(i).longitude;
+            double latitude2 = pointlist.get(i+1).latitude;
+            double longitude2 = pointlist.get(i+1).longitude;
+
+            polySum += (latitude1*longitude2) - (longitude1*latitude2);
+
+
+        }
+        polySum = polySum + (lat2*long1 - long2*lat1);
+
+        polySize = Math.abs(polySum) / 2;
+
+        return Double.toString(polySize);
+    }
 }
